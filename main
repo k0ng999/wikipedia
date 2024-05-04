@@ -1,72 +1,66 @@
 import wikipedia
-from googletrans import Translator
 
 
 def wrap_text(text, line_length=150):
     wrapped_text = ""
-    for i in range(0, len(text), line_length):
-        wrapped_text += text[i:i + line_length] + '\n'
+    words = text.split()
+    line = ""
+    for word in words:
+        if len(line) + len(word) <= line_length:
+            line += word + " "
+        else:
+            wrapped_text += line.strip() + '\n'
+            line = word + " "
+    wrapped_text += line.strip()
     return wrapped_text
 
 
-def result(num):
-    language = None  # Значение по умолчанию
-    if language_inp == '1':
-        language = "ru"
-    elif language_inp == '2':
-        language = "en"
-    translator = Translator()
-    text = (wrap_text(str(wikipedia.summary(response[num]))))
-    translation = translator.translate(text, src='en', dest=language)
-    print(translation.text)
+def get_article_summary(query, language):
+    wikipedia.set_lang(language)
+    try:
+        summary = wikipedia.summary(query)
+        return wrap_text(summary)
+    except wikipedia.exceptions.DisambiguationError:
+        print("Неоднозначный запрос. Пожалуйста, уточните ваш запрос.")
+    except wikipedia.exceptions.PageError:
+        print("Страница не найдена. Пожалуйста, попробуйте другой запрос.")
 
 
-search = (wikipedia.search(input('''Что вы хотите узнать?
-''')))
-response = [0] * (len(search)-1)
-point = 0
-nums = 1
-control = 0
+def select_article(search_results):
+    for idx, result in enumerate(search_results, start=1):
+        print(f"{idx}. {result}")
+    while True:
+        try:
+            choice = int(input("\nВведите номер статьи для прочтения (или 0 для выхода): "))
+            if choice == 0:
+                return None
+            elif choice < 1 or choice > len(search_results):
+                print("Пожалуйста, введите корректный номер статьи.")
+            else:
+                return choice - 1
+        except ValueError:
+            print("Пожалуйста, введите номер цифрой.")
 
-for i in search:
-    if control == 0:
-        control += 1
-        continue
-    response[point] = str(nums) + '. ' + i
-    nums += 1
-    point += 1
 
-for i in response:
-    print(i)
+def main():
+    query = input("Что вы хотите узнать?\n")
+    try:
+        search_results = wikipedia.search(query)
+        if not search_results:
+            print("Ничего не найдено. Пожалуйста, попробуйте другой запрос.")
+            return
+        article_idx = select_article(search_results)
+        if article_idx is None:
+            return
+        language = input("Выберите язык для перевода (ru/en): ").lower()
+        while language not in ('ru', 'en'):
+            print("Пожалуйста, выберите корректный язык (ru/en).")
+            language = input("Выберите язык для перевода (ru/en): ").lower()
+        print("\n")
+        print(get_article_summary(search_results[article_idx], language))
+    except wikipedia.exceptions.HTTPTimeoutError:
+        print("Ошибка: превышено время ожидания запроса к Википедии.")
 
-answer = input('''
-Введите цифру:
-''')
 
-language_inp = input('''Какой язык вам нужен?
-1 - Русский
-2 - Английский
-''')
-
-if answer == '1':
-    result(0)
-if answer == '2':
-    result(1)
-if answer == '3':
-    result(2)
-if answer == '4':
-    result(3)
-if answer == '5':
-    result(4)
-if answer == '6':
-    result(5)
-if answer == '7':
-    result(6)
-if answer == '8':
-    result(7)
-if answer == '9':
-    result(8)
-if answer == '10':
-    result(9)
-if answer == '11':
-    result(10)
+if __name__ == "__main__":
+    main()
