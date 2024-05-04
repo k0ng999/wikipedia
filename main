@@ -16,7 +16,7 @@ def result(num):
     elif language_inp == '2':
         language = "en"
     translator = Translator()
-    text = (wrap_text(str(wikipedia.summary(search[num]))))
+    text = (wrap_text(str(wikipedia.summary(response[num]))))
     translation = translator.translate(text, src='en', dest=language)
     print(translation.text)
 
